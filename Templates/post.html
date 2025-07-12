@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.content }}</p>
+    <a href="{{ url_for('index') }}">← Back to Home</a>
+{% endblock %}

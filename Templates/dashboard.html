@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+    <h1>📋 Dashboard</h1>
+    <a href="{{ url_for('create') }}">➕ Create New Post</a>
+    <hr>
+
+    {% for post in posts %}
+        <div class="post">
+            <h2>{{ post.title }}</h2>
+            <a href="{{ url_for('edit', post_id=post.id) }}">✏️ Edit</a> |
+            <a href="{{ url_for('delete', post_id=post.id) }}">🗑️ Delete</a>
+        </div>
+        <hr>
+    {% else %}
+        <p>No posts yet.</p>
+    {% endfor %}
+{% endblock %}

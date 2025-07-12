@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Post{% endblock %}
+
+{% block content %}
+    <h1>✏️ Edit Post</h1>
+
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <p>{{ form.title.label }}<br>{{ form.title(size=50) }}</p>
+        <p>{{ form.content.label }}<br>{{ form.content(rows=10, cols=50) }}</p>
+        <p><input type="submit" value="Save"></p>
+    </form>
+
+    <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+{% endblock %}
