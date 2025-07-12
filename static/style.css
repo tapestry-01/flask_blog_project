@@ -56,6 +56,10 @@ h1, h2 {
     margin-bottom: 20px;
 }
 
+p {
+  white-space: pre-wrap;
+}
+
 /* Post links */
 a {
     color: #4da8da;
