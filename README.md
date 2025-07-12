@@ -13,6 +13,13 @@ The UI is styled using **HTML** and **CSS**, keeping it minimal and readable. Fo
 
 I hope this serves well as a beginner project and as a foundation for more complex builds in the future.
 
+## 🌐 Live Demo
+
+You can view the live blog here: [saniket0.pythonanywhere.com](https://saniket0.pythonanywhere.com)
+
+This project was created as part of an internship task at SECT IP, Civora Nexus. Built with Flask (Python), HTML/CSS, and hosted on PythonAnywhere. Posts can be managed via an admin dashboard.
+
+
 Thanks for checking it out!
 
 – Saniket Khairnar
