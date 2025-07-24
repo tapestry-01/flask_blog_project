@@ -5,6 +5,10 @@
 {% block content %}
     <h1>Welcome to the Blog</h1>
     {% for post in posts %}
+{% if not posts %}
+    <p>No posts found matching your search.</p>
+{% endif %}
+
         <h2><a href="{{ url_for('post', post_id=post.id) }}">{{ post.title }}</a></h2>
         <p>{{ post.content[:100] }}...</p>
     {% else %}

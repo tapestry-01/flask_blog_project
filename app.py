@@ -28,8 +28,17 @@ class LoginForm(FlaskForm):
 # Routes
 @app.route('/')
 def index():
-    posts = Post.query.all()
-    return render_template('index.html', posts=posts)
+    query = request.args.get('q', '')
+    all_posts = Post.query.all()  # 💥 Pulling posts directly from DB
+
+    if query:
+        filtered_posts = [post for post in all_posts if query.lower() in post.title.lower() or query.lower() in post.content.lower()]
+    else:
+        filtered_posts = all_posts
+
+    return render_template('index.html', posts=filtered_posts, query=query)
+
+
 
 @app.route('/post/<int:post_id>')
 def post(post_id):
