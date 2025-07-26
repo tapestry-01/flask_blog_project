@@ -1,25 +1,43 @@
-# Flask Blog Project 📝
+# 🧠 Flask Blog Project
 
-Hello fellow developers,
+This is a simple Flask-based blog website built as part of my internship project. It allows users to view blog posts, and provides admin functionality to create, edit, and delete posts.
 
-This is my first project built as part of my internship with **SECT IP, Civora Nexus**. The goal was to create a simple, functional blog website using the **Flask web framework** in Python.
+---
 
-The blog allows:
-- Users to view a list of posts
-- Each post has its own page
-- Admin access to create, edit, and delete posts
+## 🚀 Features
 
-The UI is styled using **HTML** and **CSS**, keeping it minimal and readable. For content, I’ve included some of my own poems and a personal short piece — making this project not just technical, but personal.
+- 📝 Homepage displaying all blog posts
+- 🔍 View individual blog post details
+- 🔐 Admin dashboard to:
+  - Create new blog posts
+  - Edit existing posts
+  - Delete posts
+- 📱 Mobile-responsive design using Bootstrap
+- 🔎 Search functionality (title-based)
+- 🗂️ Category tagging for posts *(optional enhancement)*
+- 🔗 Live deployment on [PythonAnywhere](https://saniket1.pythonanywhere.com/)
 
-I hope this serves well as a beginner project and as a foundation for more complex builds in the future.
+---
+
+## 🛠️ Tech Stack
+
+- **Backend:** Flask (Python)
+- **Frontend:** HTML, CSS, Bootstrap
+- **Templating:** Jinja2
+- **Deployment:** PythonAnywhere
+- **Version Control:** Git + GitHub
+
+---
 
 ## 🌐 Live Demo
 
-You can view the live blog here: [saniket0.pythonanywhere.com](https://saniket0.pythonanywhere.com)
+👉 [Visit the live blog](https://saniket1.pythonanywhere.com/)
 
-This project was created as part of an internship task at SECT IP, Civora Nexus. Built with Flask (Python), HTML/CSS, and hosted on PythonAnywhere. Posts can be managed via an admin dashboard.
+This project was built as part of an internship at **SECT IP, Civora Nexus**.  
+It uses Flask for routing and logic, Bootstrap for styling, and includes a simple admin interface for post management.
 
+---
 
-Thanks for checking it out!
+## 🙏 Thanks for checking it out!
 
-– Saniket Khairnar
+— **Saniket Khairnar**
