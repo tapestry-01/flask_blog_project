@@ -1,110 +1,296 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+import os
+
+from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, PasswordField
 from wtforms.validators import DataRequired
-import os
+
+
+# --------------------------------------------------
+# App configuration
+# --------------------------------------------------
 
 app = Flask(__name__)
-app.jinja_env.cache={}
-if __name__ == '__main__':
-    app.run(debug=True)
-app.config['SECRET_KEY'] = 'thisissecret'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+
+# Disable Jinja template caching while developing
+app.jinja_env.cache = {}
+
+# Secret key
+# Render will use the SECRET_KEY environment variable.
+# The fallback keeps the application working locally.
+app.config["SECRET_KEY"] = os.environ.get(
+    "SECRET_KEY",
+    "dev-secret-key-change-this"
+)
+
+# --------------------------------------------------
+# Database configuration
+# --------------------------------------------------
+
+# If DATABASE_URL is provided by Render/PostgreSQL,
+# use it. Otherwise, fall back to SQLite.
+database_url = os.environ.get("DATABASE_URL")
+
+if database_url:
+    # Some services still provide postgres:// URLs.
+    # SQLAlchemy expects postgresql://
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace(
+            "postgres://",
+            "postgresql://",
+            1
+        )
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+
+else:
+    # Local / fallback SQLite database.
+    # Flask's instance folder is appropriate for SQLite.
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
+
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 db = SQLAlchemy(app)
 
+
+# --------------------------------------------------
 # Database model
+# --------------------------------------------------
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
 
+
+# --------------------------------------------------
 # Forms
+# --------------------------------------------------
+
 class PostForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired()])
-    content = TextAreaField('Content', validators=[DataRequired()])
+    title = StringField(
+        "Title",
+        validators=[DataRequired()]
+    )
+
+    content = TextAreaField(
+        "Content",
+        validators=[DataRequired()]
+    )
+
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
+    username = StringField(
+        "Username",
+        validators=[DataRequired()]
+    )
 
-# Routes
-@app.route('/')
+    password = PasswordField(
+        "Password",
+        validators=[DataRequired()]
+    )
+
+
+# --------------------------------------------------
+# Public routes
+# --------------------------------------------------
+
+@app.route("/")
 def index():
-    query = request.args.get('q', '')
-    all_posts = Post.query.all()  # 💥 Pulling posts directly from DB
+    query = request.args.get("q", "").strip()
+
+    all_posts = Post.query.order_by(
+        Post.id.desc()
+    ).all()
 
     if query:
-        filtered_posts = [post for post in all_posts if query.lower() in post.title.lower() or query.lower() in post.content.lower()]
+        search_query = query.lower()
+
+        filtered_posts = [
+            post
+            for post in all_posts
+            if (
+                search_query in post.title.lower()
+                or search_query in post.content.lower()
+            )
+        ]
     else:
         filtered_posts = all_posts
 
-    return render_template('index.html', posts=filtered_posts, query=query)
+    return render_template(
+        "index.html",
+        posts=filtered_posts,
+        query=query
+    )
 
 
-
-@app.route('/post/<int:post_id>')
+@app.route("/post/<int:post_id>")
 def post(post_id):
     post = Post.query.get_or_404(post_id)
-    return render_template('post.html', post=post)
 
-@app.route('/admin/login', methods=['GET', 'POST'])
+    return render_template(
+        "post.html",
+        post=post
+    )
+
+
+# --------------------------------------------------
+# Admin authentication
+# --------------------------------------------------
+
+@app.route("/admin/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
-    if form.validate_on_submit():
-        if form.username.data == 'admin' and form.password.data == 'admin123':
-            session['logged_in'] = True
-            return redirect('/admin/dashboard')
-    return render_template('login.html', form=form)
 
-@app.route('/admin/logout')
+    if form.validate_on_submit():
+
+        # Credentials can be configured through Render
+        # environment variables.
+        admin_username = os.environ.get(
+            "ADMIN_USERNAME",
+            "admin"
+        )
+
+        admin_password = os.environ.get(
+            "ADMIN_PASSWORD",
+            "admin123"
+        )
+
+        if (
+            form.username.data == admin_username
+            and form.password.data == admin_password
+        ):
+            session["logged_in"] = True
+
+            return redirect("/admin/dashboard")
+
+    return render_template(
+        "login.html",
+        form=form
+    )
+
+
+@app.route("/admin/logout")
 def logout():
-    session.pop('logged_in', None)
-    return redirect('/')
+    session.pop("logged_in", None)
 
-@app.route('/admin/dashboard')
+    return redirect("/")
+
+
+# --------------------------------------------------
+# Admin dashboard
+# --------------------------------------------------
+
+@app.route("/admin/dashboard")
 def dashboard():
-    if not session.get('logged_in'):
-        return redirect('/admin/login')
-    posts = Post.query.all()
-    return render_template('dashboard.html', posts=posts)
 
-@app.route('/admin/create', methods=['GET', 'POST'])
+    if not session.get("logged_in"):
+        return redirect("/admin/login")
+
+    posts = Post.query.order_by(
+        Post.id.desc()
+    ).all()
+
+    return render_template(
+        "dashboard.html",
+        posts=posts
+    )
+
+
+# --------------------------------------------------
+# Create post
+# --------------------------------------------------
+
+@app.route("/admin/create", methods=["GET", "POST"])
 def create():
-    if not session.get('logged_in'):
-        return redirect('/admin/login')
+
+    if not session.get("logged_in"):
+        return redirect("/admin/login")
+
     form = PostForm()
+
     if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data)
+
+        post = Post(
+            title=form.title.data,
+            content=form.content.data
+        )
+
         db.session.add(post)
         db.session.commit()
-        return redirect('/admin/dashboard')
-    return render_template('create.html', form=form)
 
-@app.route('/admin/edit/<int:post_id>', methods=['GET', 'POST'])
+        return redirect("/admin/dashboard")
+
+    return render_template(
+        "create.html",
+        form=form
+    )
+
+
+# --------------------------------------------------
+# Edit post
+# --------------------------------------------------
+
+@app.route("/admin/edit/<int:post_id>", methods=["GET", "POST"])
 def edit(post_id):
-    if not session.get('logged_in'):
-        return redirect('/admin/login')
+
+    if not session.get("logged_in"):
+        return redirect("/admin/login")
+
     post = Post.query.get_or_404(post_id)
+
     form = PostForm(obj=post)
+
     if form.validate_on_submit():
+
         post.title = form.title.data
         post.content = form.content.data
-        db.session.commit()
-        return redirect('/admin/dashboard')
-    return render_template('edit.html', form=form)
 
-@app.route('/admin/delete/<int:post_id>')
+        db.session.commit()
+
+        return redirect("/admin/dashboard")
+
+    return render_template(
+        "edit.html",
+        form=form
+    )
+
+
+# --------------------------------------------------
+# Delete post
+# --------------------------------------------------
+
+@app.route("/admin/delete/<int:post_id>")
 def delete(post_id):
-    if not session.get('logged_in'):
-        return redirect('/admin/login')
+
+    if not session.get("logged_in"):
+        return redirect("/admin/login")
+
     post = Post.query.get_or_404(post_id)
+
     db.session.delete(post)
     db.session.commit()
-    return redirect('/admin/dashboard')
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+    return redirect("/admin/dashboard")
+
+
+# --------------------------------------------------
+# Database initialization
+# --------------------------------------------------
+
+with app.app_context():
+    db.create_all()
+
+
+# --------------------------------------------------
+# Local development
+# --------------------------------------------------
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 8080)),
+        debug=True
+    )
