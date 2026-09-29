@@ -36,10 +36,8 @@ if database_url:
         )
 
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-
 else:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///blog.db"
-
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
@@ -52,20 +50,9 @@ db = SQLAlchemy(app)
 
 
 class Post(db.Model):
-    id = db.Column(
-        db.Integer,
-        primary_key=True
-    )
-
-    title = db.Column(
-        db.String(100),
-        nullable=False
-    )
-
-    content = db.Column(
-        db.Text,
-        nullable=False
-    )
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    content = db.Column(db.Text, nullable=False)
 
 
 # --------------------------------------------------
@@ -73,7 +60,6 @@ class Post(db.Model):
 # --------------------------------------------------
 
 class PostForm(FlaskForm):
-
     title = StringField(
         "Title",
         validators=[DataRequired()]
@@ -86,7 +72,6 @@ class PostForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-
     username = StringField(
         "Username",
         validators=[DataRequired()]
@@ -104,7 +89,6 @@ class LoginForm(FlaskForm):
 
 @app.route("/")
 def index():
-
     query = request.args.get("q", "").strip()
 
     all_posts = Post.query.order_by(
@@ -112,7 +96,6 @@ def index():
     ).all()
 
     if query:
-
         search_query = query.lower()
 
         filtered_posts = [
@@ -123,9 +106,7 @@ def index():
                 or search_query in post.content.lower()
             )
         ]
-
     else:
-
         filtered_posts = all_posts
 
     return render_template(
@@ -137,7 +118,6 @@ def index():
 
 @app.route("/post/<int:post_id>")
 def post(post_id):
-
     post = Post.query.get_or_404(post_id)
 
     return render_template(
@@ -152,7 +132,6 @@ def post(post_id):
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
-
     form = LoginForm()
 
     if form.validate_on_submit():
@@ -171,7 +150,6 @@ def login():
             form.username.data == admin_username
             and form.password.data == admin_password
         ):
-
             session["logged_in"] = True
 
             return redirect("/admin/dashboard")
@@ -184,11 +162,7 @@ def login():
 
 @app.route("/admin/logout")
 def logout():
-
-    session.pop(
-        "logged_in",
-        None
-    )
+    session.pop("logged_in", None)
 
     return redirect("/")
 
@@ -306,14 +280,8 @@ with app.app_context():
 # --------------------------------------------------
 
 if __name__ == "__main__":
-
     app.run(
         host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT",
-                8080
-            )
-        ),
+        port=int(os.environ.get("PORT", 8080)),
         debug=True
     )
